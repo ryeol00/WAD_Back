@@ -21,7 +21,7 @@ public class JoinService {
 
     public boolean existsUser(String userId, String username, String email) {
         return memberRepository.existsByUserId(userId)
-                || memberRepository.existsByusername(username)
+                || memberRepository.existsByUsername(username)
                 || memberRepository.existsByEmail(email);
     }
 

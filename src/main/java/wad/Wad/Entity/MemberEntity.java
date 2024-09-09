@@ -4,23 +4,23 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 
-//@Table(name = "member", uniqueConstraints = {
-//        @UniqueConstraint(name = "UK_username", columnNames = "username"),
-//        @UniqueConstraint(name = "UK_email", columnNames = "email")
-//})
-@Table(name="member")
+
+@Table(name="Member")
 @Getter
 @Setter
 public class MemberEntity {
 
     @Id
-    @Column(name = "UserId", nullable = false, length = 20)
-    private String userId;
-
     @Column(name = "username", nullable = false, length = 20)
     private String username;
+
+    @Column(name = "UserId", nullable = false, length = 20)
+    private String userId;
 
     @Column(name = "password", nullable = false)
     private String password;
@@ -30,6 +30,11 @@ public class MemberEntity {
 
     @Column(name = "role", nullable = false, length = 20)
     private String role;
+
+    @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ScPostEntity> posts = new ArrayList<>();
+
+
 
 
 }

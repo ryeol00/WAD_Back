@@ -66,6 +66,7 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         response.setStatus(HttpStatus.OK.value());
 
         System.out.println("성공~!");
+
     }
 
     @Override
@@ -85,8 +86,18 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
 
     private Cookie createCookie(String key, String value) {
         Cookie cookie = new Cookie(key, value);
-        cookie.setMaxAge(24 * 60 * 60);
+
+        // 쿠키의 유효 기간을 설정합니다 (초 단위)
+        cookie.setMaxAge(24 * 60 * 60); // 1일
+
+        // 쿠키를 클라이언트 측 스크립트에서 접근할 수 없도록 설정합니다.
         cookie.setHttpOnly(true);
+
+        // 쿠키의 경로를 설정합니다. 모든 경로에서 쿠키를 사용하도록 설정합니다.
+        cookie.setPath("/");
+
+
+
         return cookie;
     }
 }

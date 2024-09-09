@@ -1,5 +1,5 @@
 package wad.Wad.jwt;
-import io.jsonwebtoken.ExpiredJwtException;
+
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletRequest;
@@ -8,18 +8,15 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.web.filter.GenericFilterBean;
-import wad.Wad.Entity.RefreshEntity;
 import wad.Wad.Repository.RefreshRepository;
 
 import java.io.IOException;
 
 public class CustomLogoutFilter extends GenericFilterBean {
 
-    private final JWTUtil jwtUtil;
     private final RefreshRepository refreshRepository;
 
-    public CustomLogoutFilter(JWTUtil jwtUtil, RefreshRepository refreshRepository) {
-        this.jwtUtil = jwtUtil;
+    public CustomLogoutFilter(RefreshRepository refreshRepository) {
         this.refreshRepository = refreshRepository;
     }
 
@@ -41,64 +38,32 @@ public class CustomLogoutFilter extends GenericFilterBean {
             return;
         }
 
-        // get refresh token
-        String refresh = null;
+        // get refresh token from cookie
+        String refreshToken = null;
         Cookie[] cookies = request.getCookies();
         if (cookies != null) {
             for (Cookie cookie : cookies) {
                 if (cookie.getName().equals("refresh")) {
-                    refresh = cookie.getValue();
+                    refreshToken = cookie.getValue();
                 }
             }
         }
 
-        // refresh null check
-        if (refresh == null) {
-            System.out.println("Refresh token is null");
-            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            return;
+        // Remove refresh token from DB if it exists
+        if (refreshToken != null && refreshRepository.existsByRefresh(refreshToken)) {
+            refreshRepository.deleteByRefresh(refreshToken);
+            System.out.println("Refresh token deleted from DB");
         }
 
-        // expired check
-        try {
-            if (jwtUtil.isExpired(refresh)) {
-                System.out.println("Refresh token is expired");
-                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                return;
-            }
-        } catch (ExpiredJwtException e) {
-            System.out.println("ExpiredJwtException caught: " + e.getMessage());
-            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            return;
-        }
-
-        // 토큰이 refresh인지 확인 (발급시 페이로드에 명시)
-        String category = jwtUtil.getCategory(refresh);
-        if (!"refresh".equals(category)) {
-            System.out.println("Token category is not refresh");
-            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            return;
-        }
-
-        // DB에 저장되어 있는지 확인
-        Boolean isExist = refreshRepository.existsByRefresh(refresh);
-        if (!isExist) {
-            System.out.println("Refresh token does not exist in DB");
-            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            return;
-        }
-
-        // 로그아웃 진행
-        // Refresh 토큰 DB에서 제거
-        refreshRepository.deleteByRefresh(refresh);
-
-        // Refresh 토큰 Cookie 값 0
+        // 쿠키를 정리 (특히 refresh 토큰 제거)
         Cookie cookie = new Cookie("refresh", null);
-        cookie.setMaxAge(0);
+        cookie.setMaxAge(0);  // 쿠키 삭제
         cookie.setPath("/");
 
-        response.addCookie(cookie);
-        response.setStatus(HttpServletResponse.SC_OK);
+        response.addCookie(cookie);  // 쿠키 제거 응답에 추가
+        response.setStatus(HttpServletResponse.SC_OK);  // 로그아웃 성공 상태
+        response.getWriter().write("Logout successful");
+        response.getWriter().flush();
         System.out.println("Logout successful");
     }
 }

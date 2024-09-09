@@ -1,11 +1,13 @@
 package wad.Wad.DTO;
 
+import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import wad.Wad.Entity.MemberEntity;
 
 import java.util.ArrayList;
 import java.util.Collection;
+
 
 public class CustomUserDetails implements UserDetails {
 
@@ -15,6 +17,7 @@ public class CustomUserDetails implements UserDetails {
 
         this.memberEntity = memberEntity;
     }
+
 
 
     @Override
@@ -69,4 +72,12 @@ public class CustomUserDetails implements UserDetails {
 
         return true;
     }
+
+    public MemberEntity getMemberEntity() {
+        return memberEntity;
+    }
+
+
+
+
 }
